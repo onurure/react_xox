@@ -1,4 +1,14 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+AFTER CLONE REPO YOU SHOULD 
+
+### `npm i`
+
+for installing dependencies
+
+then you can run 
+
+### `npm start` 
+
+for localhost:3000
 
 ## Available Scripts
 

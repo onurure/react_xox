@@ -38,7 +38,7 @@ class User extends Component {
                 <input type="text" name="userX" value={this.state.userX} readOnly={this.state.startGame ? true : false} className="margin"  onChange={(e) => this.handleChange(e)}/>
                 <label htmlFor="">User O</label>
                 <input type="text" name="userO" value={this.state.userO} readOnly={this.state.startGame ? true : false} className="margin"  onChange={(e) => this.handleChange(e)}/>
-                <button onClick={() => this.startGame()}>Start Game</button>
+                <button onClick={() => this.startGame()} className={this.state.startGame ? 'hidden' : ''}>Start Game</button>
             </div>
         );
     }

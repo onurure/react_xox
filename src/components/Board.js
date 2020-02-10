@@ -46,16 +46,21 @@ class Board extends Component {
 
                 let winX = this.state.userXWin;
                 let winO = this.state.userOWin;
+                let winnerName = '';
                 if(this.state.xIs){
                     winO++;
+                    winnerName = this.state.userO;
                 }else{
                     winX++;
+                    winnerName = this.state.userX;
                 }
                 this.setState({
                     winner: this.state.xIs ? 'O' : 'X',
                     userOWin: winO,
                     userXWin: winX
-                }, () => {console.log(this.state)})
+                }, () => {console.log(this.state)});
+
+                alert('Winner is ' + winnerName);
             }
         }
     }
