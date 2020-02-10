@@ -36,3 +36,22 @@
     transform: rotate(360deg);
   }
 }
+
+.board{
+  text-align: center;
+  width: 315px;
+  height: 315px;
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+.square{
+  width:100px;
+  height:100px;
+  margin-right: 2px;
+  border:1px solid black;
+  display:inline-block;
+  line-height: 40px;
+}
+.margin{
+  margin: 10px;
+}
