@@ -1,0 +1,86 @@
+
+import android.os.Build
+import android.os.Bundle
+import android.view.View
+import android.view.autofill.AutofillManager
+import android.widget.EditText
+import com.facebook.react.ReactActivity
+import com.facebook.react.ReactActivityDelegate
+import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnabled
+import com.facebook.react.defaults.DefaultReactActivityDelegate
+
+class MainActivity : ReactActivity() {
+
+  private var autofillCallback: AutofillManager.AutofillCallback? = null
+
+  /**
+   * Returns the name of the main component registered from JavaScript. This is used to schedule
+   * rendering of the component.
+   */
+
+  /**
+   * Returns the instance of the [ReactActivityDelegate]. We use [DefaultReactActivityDelegate]
+   * which allows you to enable New Architecture with a single boolean flags [fabricEnabled]
+   */
+  override fun createReactActivityDelegate(): ReactActivityDelegate =
+      DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
+
+  /**
+   * Güvenlik: Samsung Pass, Google Autofill vb. otomatik doldurma servislerinin
+   * uygulama içindeki hiçbir alanı (özellikle şifre alanlarını) doldurmasına izin verilmez.
+   */
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      window.decorView.importantForAutofill =
+          View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+      blockAutofill()
+    }
+  }
+
+  /**
+   * importantForAutofill yalnızca bir "ipucu"dur; Samsung Pass / Google Password Manager gibi
+   * servisler yine de öneri gösterip parmak izi ile doldurabilir. Bu yüzden:
+   *  1) Odaklanan her EditText'te autofill ipuçları temizlenir ve aktif oturum iptal edilir.
+   *  2) Autofill öneri arayüzü (dropdown / klavye üstü öneri) gösterildiği anda iptal edilir,
+   *     böylece kullanıcı parmak izi ile doldurma adımına hiç ulaşamaz.
+   *  3) Android 14+: alanlar "hassas veri" olarak işaretlenir; erişilebilirlik servisi
+   *     üzerinden doldurma yapan uygulamalar (gerçek ekran okuyucular hariç) alana erişemez.
+   */
+  private fun blockAutofill() {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+    val afm = getSystemService(AutofillManager::class.java) ?: return
+
+    val callback =
+        object : AutofillManager.AutofillCallback() {
+          override fun onAutofillEvent(view: View, event: Int) {
+            if (event == EVENT_INPUT_SHOWN) afm.cancel()
+          }
+
+          override fun onAutofillEvent(view: View, virtualId: Int, event: Int) {
+            if (event == EVENT_INPUT_SHOWN) afm.cancel()
+          }
+        }
+    afm.registerCallback(callback)
+    autofillCallback = callback
+
+    window.decorView.viewTreeObserver.addOnGlobalFocusChangeListener { _, newFocus ->
+      if (newFocus is EditText) {
+        newFocus.importantForAutofill = View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS
+        newFocus.setAutofillHints()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+          newFocus.setAccessibilityDataSensitive(View.ACCESSIBILITY_DATA_SENSITIVE_YES)
+        }
+        afm.cancel()
+      }
+    }
+  }
+
+  override fun onDestroy() {
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+      autofillCallback?.let { getSystemService(AutofillManager::class.java)?.unregisterCallback(it) }
+      autofillCallback = null
+    }
+    super.onDestroy()
+  }
+}
